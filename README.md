@@ -31,3 +31,4 @@ Funcionalidades principais:
 API Externa:
 
 O projeto realiza integração com uma API pública de feriados para apresentar ao usuário informações sobre o próximo feriado nacional, auxiliando no planejamento das atividades.
+
