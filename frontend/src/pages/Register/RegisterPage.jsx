@@ -82,7 +82,10 @@ function RegisterPage() {
     <main className="register-page">
       <section className="register-brand">
         <div className="register-brand__content">
-          <h1>TasksHub</h1>
+
+        <h1>
+          <span>Tasks</span>Hub
+        </h1>
 
           <p>
             Gerencie suas tarefas, organize categorias e compartilhe-as com outras pessoas.

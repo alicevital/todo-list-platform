@@ -64,6 +64,10 @@
   letter-spacing: -4px;
 }
 
+.register-brand h1 span {
+  color: rgb(255 255 255 / 72%);
+}
+
 .register-brand__content p {
   max-width: 540px;
   margin: 0;

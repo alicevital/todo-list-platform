@@ -57,7 +57,9 @@ function LoginPage() {
       <section className="login-brand">
         <div className="login-brand__content">
 
-          <h1>TasksHub</h1>
+          <h1>
+            <span>Tasks</span>Hub
+          </h1>
 
           <p>
             Gerencie suas tarefas, organize categorias e compartilhe-as com outras pessoas.

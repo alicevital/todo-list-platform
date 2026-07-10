@@ -64,6 +64,10 @@
   letter-spacing: -4px;
 }
 
+.login-brand h1 span {
+  color: rgb(255 255 255 / 72%);
+}
+
 .login-brand__content p {
   max-width: 540px;
   margin: 0;
