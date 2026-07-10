@@ -2,10 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
-
-function DashboardPage() {
-  return <h1>Dashboard - TasksHub</h1>;
-}
+import DashboardPage from "./pages/Dashboard/DashboardPage";
 
 function App() {
   return (
