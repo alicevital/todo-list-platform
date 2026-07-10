@@ -30,7 +30,9 @@ class NextHolidayView(APIView):
             {
                 "date": holiday["date"],
                 "name": holiday["name"],
-                "local_name": holiday["localName"],
+                "local_name": holiday.get("localName", holiday["name"]),
                 "country_code": holiday["countryCode"],
+                "national_holiday": holiday.get("nationalHoliday"),
+                "holiday_types": holiday.get("holidayTypes", []),
             }
         )
