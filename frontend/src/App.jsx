@@ -1,8 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-function LoginPage() {
-  return <h1>Login - TasksHub</h1>;
-}
+import LoginPage from "./pages/Login/LoginPage";
 
 function RegisterPage() {
   return <h1>Cadastro - TasksHub</h1>;
