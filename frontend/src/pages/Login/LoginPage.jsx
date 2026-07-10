@@ -60,29 +60,9 @@ function LoginPage() {
           <h1>TasksHub</h1>
 
           <p>
-            Gerencie suas tarefas, organize suas categorias e compartilhe
-            atividades com outras pessoas.
+            Gerencie suas tarefas, organize categorias e compartilhe-as com outras pessoas.
           </p>
 
-          <div className="login-brand__decoration" aria-hidden="true">
-            <div className="login-brand__task">
-              <span className="login-brand__check">✓</span>
-
-              <div>
-                <strong>Planejar o dia</strong>
-                <small>Tarefa concluída</small>
-              </div>
-            </div>
-
-            <div className="login-brand__task">
-              <span className="login-brand__pending" />
-
-              <div>
-                <strong>Finalizar o projeto</strong>
-                <small>Em andamento</small>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -91,14 +71,14 @@ function LoginPage() {
           <header className="login-card__header">
 
             <div>
-              <h2>Seja Bem-vindo!</h2>
+              <h2>Seja bem-vindo!</h2>
               <p>Entre na sua conta para continuar.</p>
             </div>
           </header>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-field">
-              <label htmlFor="username">Nome de usuário</label>
+              <label htmlFor="username">Nome</label>
 
               <input
                 id="username"
