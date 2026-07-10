@@ -78,7 +78,7 @@ function LoginPage() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-field">
-              <label htmlFor="username">Nome</label>
+              <label htmlFor="username">Usuário</label>
 
               <input
                 id="username"
