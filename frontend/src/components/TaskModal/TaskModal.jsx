@@ -13,20 +13,39 @@ const initialFormData = {
 function TaskModal({
   isOpen,
   categories,
+  task,
   onClose,
-  onTaskCreated,
+  onTaskSaved,
 }) {
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const isEditing = Boolean(task);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    if (task) {
+      setFormData({
+        title: task.title || "",
+        description: task.description || "",
+        dueDate: task.due_date || "",
+        category: task.category ? String(task.category) : "",
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+
+    setError("");
+  }, [isOpen, task]);
+
   useEffect(() => {
     if (!isOpen) {
       return undefined;
     }
-
-    setFormData(initialFormData);
-    setError("");
 
     function handleKeyDown(event) {
       if (event.key === "Escape" && !isLoading) {
@@ -72,27 +91,42 @@ function TaskModal({
       return;
     }
 
-    setError("");
-    setIsLoading(true);
-
     const taskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
-      completed: false,
       due_date: formData.dueDate || null,
       category: formData.category
         ? Number(formData.category)
         : null,
     };
 
+    if (!isEditing) {
+      taskData.completed = false;
+    }
+
+    setError("");
+    setIsLoading(true);
+
     try {
-      const response = await api.post("/tasks/", taskData, {
+      const requestConfig = {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      });
+      };
 
-      onTaskCreated(response.data);
+      const response = isEditing
+        ? await api.patch(
+            `/tasks/${task.id}/`,
+            taskData,
+            requestConfig,
+          )
+        : await api.post(
+            "/tasks/",
+            taskData,
+            requestConfig,
+          );
+
+      onTaskSaved(response.data);
     } catch (requestError) {
       const responseData = requestError.response?.data;
 
@@ -102,8 +136,14 @@ function TaskModal({
         setError("A categoria selecionada não é válida.");
       } else if (requestError.response?.status === 401) {
         setError("Sua sessão expirou. Faça login novamente.");
+      } else if (requestError.response?.status === 403) {
+        setError("Você não possui permissão para editar esta tarefa.");
       } else {
-        setError("Não foi possível criar a tarefa.");
+        setError(
+          isEditing
+            ? "Não foi possível atualizar a tarefa."
+            : "Não foi possível criar a tarefa.",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -124,8 +164,15 @@ function TaskModal({
       >
         <header className="task-modal__header">
           <div>
-            <h2 id="task-modal-title">Nova tarefa</h2>
-            <p>Adicione as informações da sua atividade.</p>
+            <h2 id="task-modal-title">
+              {isEditing ? "Editar tarefa" : "Nova tarefa"}
+            </h2>
+
+            <p>
+              {isEditing
+                ? "Atualize as informações da sua atividade."
+                : "Adicione as informações da sua atividade."}
+            </p>
           </div>
 
           <button
@@ -171,7 +218,9 @@ function TaskModal({
 
           <div className="task-modal__row">
             <div className="task-modal__field">
-              <label htmlFor="task-due-date">Data de conclusão</label>
+              <label htmlFor="task-due-date">
+                Data de expiração
+              </label>
 
               <input
                 id="task-due-date"
@@ -232,7 +281,13 @@ function TaskModal({
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? "Criando..." : "Criar tarefa"}
+              {isLoading
+                ? isEditing
+                  ? "Salvando..."
+                  : "Criando..."
+                : isEditing
+                  ? "Salvar alterações"
+                  : "Criar tarefa"}
             </button>
           </div>
         </form>
