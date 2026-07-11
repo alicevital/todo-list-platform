@@ -87,20 +87,24 @@ function AppSidebar({ activePage }) {
             Categorias
         </button>
 
-          <button
-            className="app-sidebar__item"
-            type="button"
-            title="Página que será criada posteriormente"
-          >
-            <img
-              className="app-sidebar__icon"
-              src={sharedIcon}
-              alt=""
-              aria-hidden="true"
-            />
+        <button
+          className={`app-sidebar__item ${
+            activePage === "shared"
+              ? "app-sidebar__item--active"
+              : ""
+          }`}
+          type="button"
+          onClick={() => navigate("/shared")}
+        >
+          <img
+            className="app-sidebar__icon"
+            src={sharedIcon}
+            alt=""
+            aria-hidden="true"
+          />
 
-            Compartilhadas
-          </button>
+          Compartilhadas
+        </button>
         </nav>
       </div>
 

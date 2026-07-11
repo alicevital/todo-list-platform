@@ -5,6 +5,7 @@ import RegisterPage from "./pages/Register/RegisterPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import TasksPage from "./pages/Tasks/TasksPage";
 import CategoriesPage from "./pages/Categories/CategoriesPage";
+import SharedTasksPage from "./pages/Shared/SharedTasksPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/tasks" element={<TasksPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="/shared" element={<SharedTasksPage />} />
     </Routes>
   );
 }

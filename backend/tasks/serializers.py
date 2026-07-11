@@ -3,8 +3,14 @@ from .models import Task
 from users.models import User
 
 class TaskSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(
+        source="owner.username",
+    )
 
-    owner = serializers.ReadOnlyField(source="owner.username")
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True,
+    )
 
     shared_with = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
@@ -13,9 +19,27 @@ class TaskSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Task 
-        fields = "__all__"
-        read_only_fields = ["owner", "created_at", "updated_at"]
+        model = Task
+        fields = [
+            "id",
+            "owner",
+            "title",
+            "description",
+            "completed",
+            "created_at",
+            "updated_at",
+            "due_date",
+            "shared_with",
+            "category",
+            "category_name",
+        ]
+
+        read_only_fields = [
+            "owner",
+            "created_at",
+            "updated_at",
+            "category_name",
+        ]
 
     def validate_category(self, category):
         request = self.context.get("request")
