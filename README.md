@@ -1,34 +1,89 @@
+# TasksHub
 
-To do list Plataform
+Plataforma full stack para gerenciamento de tarefas pessoais e compartilhadas.
 
-Full Stack Task Management application developed as part of a technical assessment.
+O projeto foi desenvolvido para ter autenticação de usuários, organização de tarefas por categorias, filtros, compartilhamento de tarefas e integração com uma API externa de feriados.
 
-Stack:
-Back-end: Django + Django REST Framework
-Banco: PostgreSQL
-Autenticação: JWT
-Front-end: React
-Testes back-end: pytest
-Testes front-end: Selenium
-Docker: Docker + Docker Compose
-CI/CD: GitHub Actions
+## Funcionalidades
 
-Funcionalidades principais:
+* Cadastro e login de usuários;
+* Autenticação com JWT;
+* Criação, edição e exclusão de tarefas;
+* Organização por categorias;
+* Tarefas pendentes e concluídas;
+* Compartilhamento entre usuários;
+* Pesquisa, filtros e paginação;
+* Consulta do próximo feriado;
+* Dashboard responsivo.
 
-- Cadastro e login de usuário.
-- CRUD de tarefas.
-- Criar, editar e excluir categorias.
-- Marcar tarefa como concluída ou pendente.
-- Compartilhar tarefa com outro usuário.
-- Filtrar tarefas por:
-- categoria;
-- status concluída/pendente;
-- título;
-- data.
-- Paginação de tarefas.
-- API externa simples para integração.
+## Tecnologias
 
-API Externa:
+### Backend
 
-O projeto realiza integração com uma API pública de feriados para apresentar ao usuário informações sobre o próximo feriado nacional, auxiliando no planejamento das atividades.
+* Python
+* Django
+* Django REST Framework
+* Simple JWT
+* SQLite
 
+### Frontend
+
+* React
+* Vite
+* React Router
+* Axios
+* JavaScript
+* CSS
+
+## Como executar
+
+### Clonar o projeto
+
+```bash
+git clone https://github.com/alicevital/todo-list-platform.git
+cd todo-list-platform
+```
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+### Frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Próximos passos
+
+* Finalizar a integração entre frontend e backend;
+* Adicionar testes automatizados;
+* Configurar PostgreSQL;
+* Adicionar Docker;
+* Publicar a aplicação;
+* Adicionar imagens ao README.
+
+## Autora
+
+Desenvolvido por **Alice Nascimento**.
+
+* GitHub: [@alicevital](https://github.com/alicevital)
+* LinkedIn: **[https://www.linkedin.com/in/alice-nascimento-3821bb2b7/]**
+* Portfólio: **[https://alicevital.vercel.app/]**
+
+## Demonstração
+
+```text
+[aaaaaaaaaaaa]
+```
