@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import api from "../../services/api";
 
 import categoriesIcon from "../../assets/icons/categories.svg";
 import completedIcon from "../../assets/icons/completed.svg";
@@ -16,28 +18,126 @@ import "./DashboardPage.css";
 function DashboardPage() {
   const navigate = useNavigate();
 
+  const [tasks, setTasks] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [today, setToday] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const username = localStorage.getItem("username");
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setToday(new Date());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      const accessToken = localStorage.getItem("access_token");
+
+      if (!accessToken) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const requestConfig = {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        };
+
+        const [tasksResponse, categoriesResponse] = await Promise.all([
+          api.get("/tasks/", requestConfig),
+          api.get("/categories/", requestConfig),
+        ]);
+
+        const tasksData = Array.isArray(tasksResponse.data)
+          ? tasksResponse.data
+          : tasksResponse.data.results || [];
+
+        const categoriesData = Array.isArray(categoriesResponse.data)
+          ? categoriesResponse.data
+          : categoriesResponse.data.results || [];
+
+        setTasks(tasksData);
+        setCategories(categoriesData);
+      } catch (requestError) {
+        if (requestError.response?.status === 401) {
+          handleLogout();
+          return;
+        }
+
+        setError(
+          "Não foi possível carregar as informações do dashboard.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [navigate]);
+
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
-  }).format(new Date());
+  }).format(today);
 
   const currentDate =
     formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem("access_token");
+  const totalTasks = tasks.length;
 
-    if (!accessToken) {
-      navigate("/login", { replace: true });
-    }
-  }, [navigate]);
+  const pendingTasks = tasks.filter(
+    (task) => !task.completed,
+  ).length;
+
+  const completedTasks = tasks.filter(
+    (task) => task.completed,
+  ).length;
+
+  const sharedTasks = tasks.filter(
+    (task) => username && task.owner !== username,
+  ).length;
+
+  const recentTasks = tasks.slice(0, 4);
 
   function handleLogout() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("username");
 
     navigate("/login", { replace: true });
+  }
+
+  function getCategoryName(categoryId) {
+    if (!categoryId) {
+      return "Sem categoria";
+    }
+
+    const category = categories.find(
+      (currentCategory) => currentCategory.id === categoryId,
+    );
+
+    return category?.name || "Sem categoria";
+  }
+
+  function formatDueDate(date) {
+    if (!date) {
+      return "Sem prazo";
+    }
+
+    return new Intl.DateTimeFormat("pt-BR").format(
+      new Date(`${date}T00:00:00`),
+    );
   }
 
   return (
@@ -141,6 +241,12 @@ function DashboardPage() {
           </button>
         </header>
 
+        {error && (
+          <p className="dashboard-error" role="alert">
+            {error}
+          </p>
+        )}
+
         <section
           className="dashboard-summary"
           aria-label="Resumo das tarefas"
@@ -152,7 +258,7 @@ function DashboardPage() {
 
             <div>
               <p>Total de tarefas</p>
-              <strong>0</strong>
+              <strong>{isLoading ? "..." : totalTasks}</strong>
             </div>
           </article>
 
@@ -163,7 +269,7 @@ function DashboardPage() {
 
             <div>
               <p>Pendentes</p>
-              <strong>0</strong>
+              <strong>{isLoading ? "..." : pendingTasks}</strong>
             </div>
           </article>
 
@@ -174,7 +280,7 @@ function DashboardPage() {
 
             <div>
               <p>Concluídas</p>
-              <strong>0</strong>
+              <strong>{isLoading ? "..." : completedTasks}</strong>
             </div>
           </article>
 
@@ -185,7 +291,7 @@ function DashboardPage() {
 
             <div>
               <p>Compartilhadas</p>
-              <strong>0</strong>
+              <strong>{isLoading ? "..." : sharedTasks}</strong>
             </div>
           </article>
         </section>
@@ -195,35 +301,101 @@ function DashboardPage() {
             <header className="dashboard-panel__header">
               <div>
                 <h2>Tarefas recentes</h2>
-                <p>Suas últimas tarefas aparecerão aqui.</p>
+                <p>Suas últimas atividades aparecerão aqui.</p>
               </div>
 
               <button type="button">Ver todas</button>
             </header>
 
-            <div className="dashboard-empty-state">
-              <div className="dashboard-empty-state__icon" aria-hidden="true">
-                <img src={tasksIcon} alt="" />
+            {isLoading ? (
+              <div className="dashboard-loading">
+                <p>Carregando tarefas...</p>
               </div>
-
-              <h3>Nenhuma tarefa cadastrada</h3>
-
-              <p>
-                Crie sua primeira tarefa para começar a organizar suas
-                atividades.
-              </p>
-
-              <button type="button">
-                <img
-                  className="dashboard-button__icon"
-                  src={plusIcon}
-                  alt=""
+            ) : recentTasks.length === 0 ? (
+              <div className="dashboard-empty-state">
+                <div
+                  className="dashboard-empty-state__icon"
                   aria-hidden="true"
-                />
+                >
+                  <img src={tasksIcon} alt="" />
+                </div>
 
-                Criar tarefa
-              </button>
-            </div>
+                <h3>Nenhuma tarefa cadastrada</h3>
+
+                <p>
+                  Crie sua primeira tarefa para começar a organizar suas
+                  atividades.
+                </p>
+
+                <button type="button">
+                  <img
+                    className="dashboard-button__icon"
+                    src={plusIcon}
+                    alt=""
+                    aria-hidden="true"
+                  />
+
+                  Criar primeira tarefa
+                </button>
+              </div>
+            ) : (
+              <div className="dashboard-task-list">
+                {recentTasks.map((task) => (
+                  <article
+                    className="dashboard-task"
+                    key={task.id}
+                  >
+                    <div
+                      className={`dashboard-task__status ${
+                        task.completed
+                          ? "dashboard-task__status--completed"
+                          : ""
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <img
+                        src={
+                          task.completed
+                            ? completedIcon
+                            : pendingIcon
+                        }
+                        alt=""
+                      />
+                    </div>
+
+                    <div className="dashboard-task__content">
+                      <div className="dashboard-task__title">
+                        <h3>{task.title}</h3>
+
+                        <span>
+                          {task.completed
+                            ? "Concluída"
+                            : "Pendente"}
+                        </span>
+                      </div>
+
+                      {task.description && (
+                        <p>{task.description}</p>
+                      )}
+
+                      <div className="dashboard-task__details">
+                        <span>
+                          {getCategoryName(task.category)}
+                        </span>
+
+                        <span>
+                          Prazo: {formatDueDate(task.due_date)}
+                        </span>
+
+                        {task.owner !== username && (
+                          <span>Compartilhada por {task.owner}</span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </article>
 
           <article className="dashboard-panel dashboard-panel--categories">
@@ -234,20 +406,45 @@ function DashboardPage() {
               </div>
             </header>
 
-            <div className="dashboard-categories">
-              <p>Nenhuma categoria cadastrada.</p>
+            {isLoading ? (
+              <div className="dashboard-loading">
+                <p>Carregando categorias...</p>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="dashboard-categories">
+                <p>Nenhuma categoria cadastrada.</p>
 
-              <button type="button">
-                <img
-                  className="dashboard-button__icon"
-                  src={plusIcon}
-                  alt=""
-                  aria-hidden="true"
-                />
+                <button type="button">
+                  <img
+                    className="dashboard-button__icon"
+                    src={plusIcon}
+                    alt=""
+                    aria-hidden="true"
+                  />
 
-                Criar categoria
-              </button>
-            </div>
+                  Criar categoria
+                </button>
+              </div>
+            ) : (
+              <div className="dashboard-category-list">
+                {categories.slice(0, 6).map((category) => (
+                  <div
+                    className="dashboard-category"
+                    key={category.id}
+                  >
+                    <div className="dashboard-category__icon">
+                      <img
+                        src={categoriesIcon}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <span>{category.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </article>
         </section>
       </main>

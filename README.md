@@ -79,8 +79,8 @@ npm run dev
 Desenvolvido por **Alice Nascimento**.
 
 * GitHub: [@alicevital](https://github.com/alicevital)
-* LinkedIn: **[https://www.linkedin.com/in/alice-nascimento-3821bb2b7/]**
-* Portfólio: **[https://alicevital.vercel.app/]**
+* LinkedIn:[https://www.linkedin.com/in/alice-nascimento-3821bb2b7/] (https://www.linkedin.com/in/alice-nascimento-3821bb2b7/)
+* Portfólio: [https://alicevital.vercel.app/](https://alicevital.vercel.app/)
 
 ## Demonstração
 
