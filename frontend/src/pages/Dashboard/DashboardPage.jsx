@@ -15,6 +15,7 @@ import tasksIcon from "../../assets/icons/tasks.svg";
 
 import CategoryModal from "../../components/CategoryModal/CategoryModal";
 import TaskModal from "../../components/TaskModal/TaskModal";
+import AppSidebar from "../../components/AppSidebar/AppSidebar";
 
 import "./DashboardPage.css";
 
@@ -319,90 +320,7 @@ function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <aside className="dashboard-sidebar">
-        <div>
-          <div className="dashboard-sidebar__brand">
-            <span>Tasks</span>Hub
-          </div>
-
-          <nav
-            className="dashboard-sidebar__navigation"
-            aria-label="Navegação principal"
-          >
-            <button
-              className="dashboard-sidebar__item dashboard-sidebar__item--active"
-              type="button"
-            >
-              <img
-                className="dashboard-sidebar__icon"
-                src={homeIcon}
-                alt=""
-                aria-hidden="true"
-              />
-
-              Visão geral
-            </button>
-
-            <button
-              className="dashboard-sidebar__item"
-              type="button"
-            >
-              <img
-                className="dashboard-sidebar__icon"
-                src={myTasksIcon}
-                alt=""
-                aria-hidden="true"
-              />
-
-              Minhas tarefas
-            </button>
-
-            <button
-              className="dashboard-sidebar__item"
-              type="button"
-            >
-              <img
-                className="dashboard-sidebar__icon"
-                src={categoriesIcon}
-                alt=""
-                aria-hidden="true"
-              />
-
-              Categorias
-            </button>
-
-            <button
-              className="dashboard-sidebar__item"
-              type="button"
-            >
-              <img
-                className="dashboard-sidebar__icon"
-                src={sharedIcon}
-                alt=""
-                aria-hidden="true"
-              />
-
-              Compartilhadas
-            </button>
-          </nav>
-        </div>
-
-        <button
-          className="dashboard-sidebar__logout"
-          type="button"
-          onClick={handleLogout}
-        >
-          <img
-            className="dashboard-sidebar__icon"
-            src={logoutIcon}
-            alt=""
-            aria-hidden="true"
-          />
-
-          Sair
-        </button>
-      </aside>
-
+      <AppSidebar activePage="dashboard" />
       <main className="dashboard-content">
         <header className="dashboard-header">
           <div>
