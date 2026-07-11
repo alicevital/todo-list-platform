@@ -207,16 +207,28 @@ function DashboardPage() {
     closeTaskModal();
   }
 
-  function handleCategoryCreated(createdCategory) {
-    setCategories((currentCategories) =>
-      [...currentCategories, createdCategory].sort(
+  function handleCategorySaved(savedCategory) {
+    setCategories((currentCategories) => {
+      const categoryAlreadyExists = currentCategories.some(
+        (category) => category.id === savedCategory.id,
+      );
+
+      const updatedCategories = categoryAlreadyExists
+        ? currentCategories.map((category) =>
+            category.id === savedCategory.id
+              ? savedCategory
+              : category,
+          )
+        : [...currentCategories, savedCategory];
+
+      return updatedCategories.sort(
         (firstCategory, secondCategory) =>
           firstCategory.name.localeCompare(
             secondCategory.name,
             "pt-BR",
           ),
-      ),
-    );
+      );
+    });
 
     setIsCategoryModalOpen(false);
   }
@@ -680,10 +692,9 @@ function DashboardPage() {
 
       <CategoryModal
         isOpen={isCategoryModalOpen}
-        onClose={() =>
-          setIsCategoryModalOpen(false)
-        }
-        onCategoryCreated={handleCategoryCreated}
+        category={null}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategorySaved={handleCategorySaved}
       />
     </div>
   );

@@ -68,20 +68,24 @@ function AppSidebar({ activePage }) {
             Minhas tarefas
           </button>
 
-          <button
-            className="app-sidebar__item"
+        <button
+            className={`app-sidebar__item ${
+                activePage === "categories"
+                ? "app-sidebar__item--active"
+                : ""
+            }`}
             type="button"
-            title="Página que será criada na próxima etapa"
-          >
+            onClick={() => navigate("/categories")}
+            >
             <img
-              className="app-sidebar__icon"
-              src={categoriesIcon}
-              alt=""
-              aria-hidden="true"
+                className="app-sidebar__icon"
+                src={categoriesIcon}
+                alt=""
+                aria-hidden="true"
             />
 
             Categorias
-          </button>
+        </button>
 
           <button
             className="app-sidebar__item"

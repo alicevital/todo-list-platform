@@ -5,20 +5,29 @@ import "./CategoryModal.css";
 
 function CategoryModal({
   isOpen,
+  category,
   onClose,
-  onCategoryCreated,
+  onCategorySaved,
 }) {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const isEditing = Boolean(category);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setName(category?.name || "");
+    setError("");
+  }, [category, isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       return undefined;
     }
-
-    setName("");
-    setError("");
 
     function handleKeyDown(event) {
       if (event.key === "Escape" && !isLoading) {
@@ -64,20 +73,30 @@ function CategoryModal({
     setError("");
     setIsLoading(true);
 
-    try {
-      const response = await api.post(
-        "/categories/",
-        {
-          name: categoryName,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
+    const requestConfig = {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    };
 
-      onCategoryCreated(response.data);
+    try {
+      const response = isEditing
+        ? await api.patch(
+            `/categories/${category.id}/`,
+            {
+              name: categoryName,
+            },
+            requestConfig,
+          )
+        : await api.post(
+            "/categories/",
+            {
+              name: categoryName,
+            },
+            requestConfig,
+          );
+
+      onCategorySaved(response.data);
     } catch (requestError) {
       const responseData = requestError.response?.data;
 
@@ -89,7 +108,11 @@ function CategoryModal({
       } else if (requestError.response?.status === 401) {
         setError("Sua sessão expirou. Faça login novamente.");
       } else {
-        setError("Não foi possível criar a categoria.");
+        setError(
+          isEditing
+            ? "Não foi possível atualizar a categoria."
+            : "Não foi possível criar a categoria.",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -110,10 +133,14 @@ function CategoryModal({
       >
         <header className="category-modal__header">
           <div>
-            <h2 id="category-modal-title">Nova categoria</h2>
+            <h2 id="category-modal-title">
+              {isEditing ? "Editar categoria" : "Nova categoria"}
+            </h2>
 
             <p>
-              Crie uma categoria para organizar suas tarefas.
+              {isEditing
+                ? "Atualize o nome da categoria."
+                : "Crie uma categoria para organizar suas tarefas."}
             </p>
           </div>
 
@@ -171,7 +198,13 @@ function CategoryModal({
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? "Criando..." : "Criar categoria"}
+              {isLoading
+                ? isEditing
+                  ? "Salvando..."
+                  : "Criando..."
+                : isEditing
+                  ? "Salvar alterações"
+                  : "Criar categoria"}
             </button>
           </div>
         </form>
