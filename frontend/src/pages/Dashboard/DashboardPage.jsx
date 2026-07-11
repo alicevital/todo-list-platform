@@ -13,6 +13,8 @@ import plusIcon from "../../assets/icons/plus.svg";
 import sharedIcon from "../../assets/icons/shared.svg";
 import tasksIcon from "../../assets/icons/tasks.svg";
 
+import TaskModal from "../../components/TaskModal/TaskModal";
+
 import "./DashboardPage.css";
 
 function DashboardPage() {
@@ -23,6 +25,7 @@ function DashboardPage() {
   const [today, setToday] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const username = localStorage.getItem("username");
 
@@ -140,6 +143,15 @@ function DashboardPage() {
     );
   }
 
+  function handleTaskCreated(createdTask) {
+  setTasks((currentTasks) => [
+    createdTask,
+    ...currentTasks,
+  ]);
+
+  setIsTaskModalOpen(false);
+  }
+
   return (
     <div className="dashboard-page">
       <aside className="dashboard-sidebar">
@@ -229,7 +241,12 @@ function DashboardPage() {
             </p>
           </div>
 
-          <button className="dashboard-header__button" type="button">
+            <button
+              className="dashboard-header__button"
+              type="button"
+              onClick={() => setIsTaskModalOpen(true)}
+            >
+
             <img
               className="dashboard-button__icon"
               src={plusIcon}
@@ -327,7 +344,10 @@ function DashboardPage() {
                   atividades.
                 </p>
 
-                <button type="button">
+                  <button
+                    type="button"
+                    onClick={() => setIsTaskModalOpen(true)}
+                  >
                   <img
                     className="dashboard-button__icon"
                     src={plusIcon}
@@ -448,6 +468,13 @@ function DashboardPage() {
           </article>
         </section>
       </main>
+      
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        categories={categories}
+        onClose={() => setIsTaskModalOpen(false)}
+        onTaskCreated={handleTaskCreated}
+      />
     </div>
   );
 }
