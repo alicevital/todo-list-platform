@@ -11,7 +11,7 @@ import CategoryModal from "../../components/CategoryModal/CategoryModal";
 
 import "./CategoriesPage.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 function CategoriesPage() {
   const navigate = useNavigate();
@@ -174,9 +174,6 @@ function CategoriesPage() {
       <main className="categories-content">
         <header className="categories-header">
           <div>
-            <p className="categories-header__label">
-              Organização
-            </p>
 
             <h1>Categorias</h1>
 

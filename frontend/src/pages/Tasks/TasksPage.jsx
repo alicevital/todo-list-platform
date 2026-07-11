@@ -13,7 +13,7 @@ import TaskModal from "../../components/TaskModal/TaskModal";
 
 import "./TasksPage.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 2;
 
 function TasksPage() {
   const navigate = useNavigate();
@@ -317,14 +317,11 @@ function TasksPage() {
       <main className="tasks-content">
         <header className="tasks-header">
           <div>
-            <p className="tasks-header__label">
-              Gerenciamento
-            </p>
 
             <h1>Minhas tarefas</h1>
 
             <p>
-              Encontre, filtre e organize todas as suas atividades.
+              Encontre, filtre e organize todas as suas tarefas por aqui.
             </p>
           </div>
 
