@@ -2,7 +2,7 @@ from pathlib import Path
 
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
-
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -112,25 +112,40 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-database_path = Path(
-    config(
-        "SQLITE_PATH",
-        default=str(BASE_DIR / "db.sqlite3"),
-    )
-)
-
-database_path.parent.mkdir(
-    parents=True,
-    exist_ok=True,
+DATABASE_URL = config(
+    "DATABASE_URL",
+    default="",
 )
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": database_path,
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+        )
     }
-}
+
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+else:
+    database_path = Path(
+        config(
+            "SQLITE_PATH",
+            default=str(BASE_DIR / "db.sqlite3"),
+        )
+    )
+
+    database_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": database_path,
+        }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [

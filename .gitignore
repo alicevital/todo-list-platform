@@ -22,6 +22,8 @@ ENV/
 # Environment variables
 .env
 .env.*
+backend/.env
+backend/staticfiles/
 
 # Django
 db.sqlite3
