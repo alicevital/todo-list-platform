@@ -12,6 +12,7 @@ import pendingIcon from "../../assets/icons/pending.svg";
 import plusIcon from "../../assets/icons/plus.svg";
 import sharedIcon from "../../assets/icons/shared.svg";
 import tasksIcon from "../../assets/icons/tasks.svg";
+import holidayIcon from "../../assets/icons/holiday.svg";
 
 import CategoryModal from "../../components/CategoryModal/CategoryModal";
 import TaskModal from "../../components/TaskModal/TaskModal";
@@ -33,6 +34,11 @@ function DashboardPage() {
     useState(false);
 
   const [taskToEdit, setTaskToEdit] = useState(null);
+
+  const [nextHoliday, setNextHoliday] = useState(null);
+  const [isHolidayLoading, setIsHolidayLoading] =
+  useState(true);
+  const [holidayError, setHolidayError] = useState("");
 
   const username = localStorage.getItem("username");
 
@@ -102,6 +108,46 @@ function DashboardPage() {
     loadDashboardData();
   }, [navigate]);
 
+    useEffect(() => {
+    async function loadNextHoliday() {
+      const accessToken =
+        localStorage.getItem("access_token");
+
+      if (!accessToken) {
+        return;
+      }
+
+      setIsHolidayLoading(true);
+      setHolidayError("");
+
+      try {
+        const response = await api.get(
+          "/integrations/holidays/next/",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+
+        setNextHoliday(response.data);
+      } catch (requestError) {
+        if (requestError.response?.status === 401) {
+          handleLogout();
+          return;
+        }
+
+        setHolidayError(
+          "Não foi possível consultar o próximo feriado.",
+        );
+      } finally {
+        setIsHolidayLoading(false);
+      }
+    }
+
+    loadNextHoliday();
+  }, []);
+
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -127,6 +173,8 @@ function DashboardPage() {
   ).length;
 
   const recentTasks = tasks.slice(0, 4);
+
+  const daysUntilHoliday = getDaysUntilHoliday(nextHoliday?.date,);
 
   function handleLogout() {
     localStorage.removeItem("access_token");
@@ -330,6 +378,36 @@ function DashboardPage() {
     }
   }
 
+  function formatHolidayDate(date) {
+  if (!date) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function getDaysUntilHoliday(date) {
+  if (!date) {
+    return null;
+  }
+
+  const todayDate = new Date();
+  const holidayDate = new Date(`${date}T00:00:00`);
+
+  todayDate.setHours(0, 0, 0, 0);
+
+  const differenceInMilliseconds =
+    holidayDate.getTime() - todayDate.getTime();
+
+  return Math.ceil(
+    differenceInMilliseconds / (1000 * 60 * 60 * 24),
+  );
+}
+
   return (
     <div className="dashboard-page">
       <AppSidebar activePage="dashboard" />
@@ -441,6 +519,61 @@ function DashboardPage() {
             </div>
           </article>
         </section>
+
+        <section
+  className="dashboard-holiday"
+  aria-label="Próximo feriado"
+  >
+    <div className="dashboard-holiday__icon">
+      <img
+        src={holidayIcon}
+        alt=""
+        aria-hidden="true"
+      />
+    </div>
+
+    <div className="dashboard-holiday__content">
+      <p className="dashboard-holiday__label">
+        Próximo feriado
+      </p>
+
+      {isHolidayLoading ? (
+        <p className="dashboard-holiday__message">
+          Consultando calendário de feriados...
+        </p>
+      ) : holidayError ? (
+        <p className="dashboard-holiday__message">
+          {holidayError}
+        </p>
+      ) : nextHoliday ? (
+        <>
+          <h2>
+            {nextHoliday.local_name || nextHoliday.name}
+          </h2>
+
+          <div className="dashboard-holiday__details">
+            <span>
+              {formatHolidayDate(nextHoliday.date)}
+            </span>
+
+            {daysUntilHoliday !== null && (
+              <span>
+                {daysUntilHoliday === 0
+                  ? "É hoje"
+                  : daysUntilHoliday === 1
+                    ? "Falta 1 dia"
+                    : `Faltam ${daysUntilHoliday} dias`}
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="dashboard-holiday__message">
+          Nenhum próximo feriado encontrado.
+        </p>
+      )}
+    </div>
+  </section>
 
         <section className="dashboard-grid">
           <article className="dashboard-panel dashboard-panel--tasks">
