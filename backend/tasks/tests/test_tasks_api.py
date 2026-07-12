@@ -24,6 +24,12 @@ def authenticated_client(user):
 
 @pytest.mark.django_db
 def test_authenticated_user_can_create_task(authenticated_client, user):
+
+    """
+    Verifica se um usuário autenticado consegue criar uma tarefa
+    e se a tarefa criada fica vinculada ao usuário responsável.
+    """
+
     payload = {
         "title": "Estudar Django",
         "description": "Criar testes com pytest",
@@ -47,6 +53,12 @@ def test_authenticated_user_can_create_task(authenticated_client, user):
 
 @pytest.mark.django_db
 def test_unauthenticated_user_cannot_list_tasks():
+
+    """
+    Verifica se a API impede que usuários não autenticados
+    visualizem a lista de tarefas.
+    """
+
     client = APIClient()
 
     response = client.get(reverse("task-list"))
@@ -56,6 +68,12 @@ def test_unauthenticated_user_cannot_list_tasks():
 
 @pytest.mark.django_db
 def test_user_only_sees_own_tasks(authenticated_client, user):
+
+    """
+    Verifica se um usuário não consegue visualizar tarefas de
+    outras pessoas que não foram compartilhadas com ele.
+    """
+
     another_user = User.objects.create_user(
         username="maria",
         password="senha123",
@@ -82,6 +100,12 @@ def test_user_only_sees_own_tasks(authenticated_client, user):
 
 @pytest.mark.django_db
 def test_owner_can_update_task(authenticated_client, user):
+
+    """
+    Verifica se o proprietário consegue atualizar os dados
+    de uma tarefa criada por ele.
+    """
+
     task = Task.objects.create(
         owner=user,
         title="Título antigo",
@@ -107,6 +131,12 @@ def test_owner_can_update_task(authenticated_client, user):
 
 @pytest.mark.django_db
 def test_owner_can_delete_task(authenticated_client, user):
+
+    """
+    Verifica se o proprietário consegue excluir uma tarefa
+    e se ela é removida do banco de dados.
+    """
+
     task = Task.objects.create(
         owner=user,
         title="Tarefa para excluir",
@@ -125,6 +155,12 @@ def test_owner_can_delete_task(authenticated_client, user):
 
 @pytest.mark.django_db
 def test_another_user_cannot_update_task(user):
+
+    """
+    Verifica se um usuário diferente do proprietário não consegue
+    alterar uma tarefa que não pertence a ele.
+    """
+
     task = Task.objects.create(
         owner=user,
         title="Tarefa protegida",
@@ -161,6 +197,12 @@ def test_another_user_cannot_update_task(user):
 
 @pytest.mark.django_db
 def test_another_user_cannot_delete_task(user):
+
+    """
+    Verifica se um usuário diferente do proprietário não consegue
+    excluir uma tarefa que não pertence a ele.
+    """
+
     task = Task.objects.create(
         owner=user,
         title="Tarefa protegida",
@@ -187,3 +229,167 @@ def test_another_user_cannot_delete_task(user):
     ]
 
     assert Task.objects.filter(id=task.id).exists()
+
+
+@pytest.mark.django_db
+def test_owner_can_share_task(authenticated_client, user):
+
+    """
+    Verifica se o proprietário consegue compartilhar uma tarefa
+    com outro usuário cadastrado no sistema.
+    """
+
+    shared_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa compartilhada",
+    )
+
+    response = authenticated_client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {
+            "shared_with": [shared_user.id],
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    task.refresh_from_db()
+
+    assert task.shared_with.filter(
+        id=shared_user.id,
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_shared_user_can_view_shared_task(user):
+
+    """
+    Verifica se o usuário selecionado no compartilhamento consegue
+    visualizar a tarefa na lista de tarefas compartilhadas.
+    """
+
+    shared_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa compartilhada",
+    )
+
+    task.shared_with.add(shared_user)
+
+    client = APIClient()
+    client.force_authenticate(user=shared_user)
+
+    response = client.get(
+        reverse("task-list"),
+        {"scope": "shared"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    results = response.data["results"]
+
+    assert len(results) == 1
+    assert results[0]["id"] == task.id
+    assert results[0]["owner"] == user.username
+
+
+@pytest.mark.django_db
+def test_shared_user_cannot_update_task(user):
+
+    """
+    Verifica se uma tarefa compartilhada permanece somente para
+    leitura e não pode ser alterada pelo usuário convidado.
+    """
+
+    shared_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa somente leitura",
+    )
+
+    task.shared_with.add(shared_user)
+
+    client = APIClient()
+    client.force_authenticate(user=shared_user)
+
+    response = client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {
+            "title": "Tentativa de alteração",
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    task.refresh_from_db()
+
+    assert task.title == "Tarefa somente leitura"
+
+
+@pytest.mark.django_db
+def test_removed_shared_user_cannot_view_task(
+    authenticated_client,
+    user,
+):
+
+    """
+    Verifica se o usuário deixa de visualizar a tarefa após ser
+    removido da lista de compartilhamento.
+    """
+
+    shared_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa compartilhada",
+    )
+
+    task.shared_with.add(shared_user)
+
+    response = authenticated_client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {
+            "shared_with": [],
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    client = APIClient()
+    client.force_authenticate(user=shared_user)
+
+    shared_response = client.get(
+        reverse("task-list"),
+        {"scope": "shared"},
+    )
+
+    assert shared_response.status_code == status.HTTP_200_OK
+    assert shared_response.data["results"] == []
