@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from tasks.models import Task
 from users.models import User
+from categories.models import Category
 
 
 @pytest.fixture
@@ -393,3 +394,228 @@ def test_removed_shared_user_cannot_view_task(
 
     assert shared_response.status_code == status.HTTP_200_OK
     assert shared_response.data["results"] == []
+
+@pytest.mark.django_db
+def test_owner_can_mark_task_as_completed(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se o proprietário consegue marcar uma tarefa
+    pendente como concluída.
+    """
+
+    # Arrange
+    task = Task.objects.create(
+        owner=user,
+        title="Finalizar documentação",
+        completed=False,
+    )
+
+    # Act
+    response = authenticated_client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {"completed": True},
+        format="json",
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    task.refresh_from_db()
+
+    assert task.completed is True
+    assert response.data["completed"] is True
+
+
+@pytest.mark.django_db
+def test_owner_can_mark_task_as_pending(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se o proprietário consegue reabrir uma tarefa
+    concluída, marcando-a novamente como pendente.
+    """
+
+    # Arrange
+    task = Task.objects.create(
+        owner=user,
+        title="Revisar documentação",
+        completed=True,
+    )
+
+    # Act
+    response = authenticated_client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {"completed": False},
+        format="json",
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    task.refresh_from_db()
+
+    assert task.completed is False
+    assert response.data["completed"] is False
+
+
+@pytest.mark.django_db
+def test_user_can_filter_tasks_by_completed_status(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se o usuário consegue filtrar suas tarefas
+    pelo status de conclusão.
+    """
+
+    # Arrange
+    completed_task = Task.objects.create(
+        owner=user,
+        title="Tarefa concluída",
+        completed=True,
+    )
+
+    Task.objects.create(
+        owner=user,
+        title="Tarefa pendente",
+        completed=False,
+    )
+
+    # Act
+    response = authenticated_client.get(
+        reverse("task-list"),
+        {"completed": "true"},
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    results = response.data["results"]
+
+    assert len(results) == 1
+    assert results[0]["id"] == completed_task.id
+    assert results[0]["completed"] is True
+
+
+@pytest.mark.django_db
+def test_user_can_filter_tasks_by_category(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se o usuário consegue visualizar apenas as tarefas
+    pertencentes à categoria selecionada.
+    """
+
+    # Arrange
+    studies_category = Category.objects.create(
+        owner=user,
+        name="Estudos",
+    )
+
+    work_category = Category.objects.create(
+        owner=user,
+        name="Trabalho",
+    )
+
+    studies_task = Task.objects.create(
+        owner=user,
+        title="Estudar Django",
+        category=studies_category,
+    )
+
+    Task.objects.create(
+        owner=user,
+        title="Preparar reunião",
+        category=work_category,
+    )
+
+    # Act
+    response = authenticated_client.get(
+        reverse("task-list"),
+        {"category": studies_category.id},
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    results = response.data["results"]
+
+    assert len(results) == 1
+    assert results[0]["id"] == studies_task.id
+    assert results[0]["category"] == studies_category.id
+
+
+@pytest.mark.django_db
+def test_user_can_search_tasks_by_title(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se a busca retorna tarefas cujo título corresponde
+    ao texto informado pelo usuário.
+    """
+
+    # Arrange
+    django_task = Task.objects.create(
+        owner=user,
+        title="Estudar Django REST Framework",
+    )
+
+    Task.objects.create(
+        owner=user,
+        title="Organizar documentos",
+    )
+
+    # Act
+    response = authenticated_client.get(
+        reverse("task-list"),
+        {"search": "Django"},
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+
+    results = response.data["results"]
+
+    assert len(results) == 1
+    assert results[0]["id"] == django_task.id
+
+
+@pytest.mark.django_db
+def test_task_list_is_paginated(
+    authenticated_client,
+    user,
+):
+    """
+    Verifica se a listagem de tarefas utiliza paginação e limita
+    a quantidade de resultados exibidos por página.
+    """
+
+    # Arrange
+    for task_number in range(5):
+        Task.objects.create(
+            owner=user,
+            title=f"Tarefa {task_number + 1}",
+        )
+
+    # Act
+    response = authenticated_client.get(
+        reverse("task-list"),
+    )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["count"] == 5
+    assert len(response.data["results"]) == 2
+    assert response.data["next"] is not None
+    assert response.data["previous"] is None
