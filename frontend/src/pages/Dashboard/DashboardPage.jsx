@@ -421,7 +421,7 @@ function getDaysUntilHoliday(date) {
             <h1>Olá! Vamos organizar suas tarefas?</h1>
 
             <p className="dashboard-header__description">
-              Acompanhe suas tarefas por aqui!.
+              Acompanhe suas tarefas por aqui!
             </p>
           </div>
 
@@ -581,7 +581,7 @@ function getDaysUntilHoliday(date) {
               <div>
                 <h2>Tarefas recentes</h2>
                 <p>
-                  Suas últimas atividades aparecerão aqui.
+                  Suas últimas atividades aparecerão aqui, clique no ícone da tarefa para concluí-la!
                 </p>
               </div>
 
