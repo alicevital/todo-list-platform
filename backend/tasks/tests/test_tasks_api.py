@@ -79,3 +79,111 @@ def test_user_only_sees_own_tasks(authenticated_client, user):
 
     assert len(results) == 1
     assert results[0]["id"] == own_task.id
+
+@pytest.mark.django_db
+def test_owner_can_update_task(authenticated_client, user):
+    task = Task.objects.create(
+        owner=user,
+        title="Título antigo",
+    )
+
+    response = authenticated_client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {
+            "title": "Título atualizado",
+        },
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    task.refresh_from_db()
+
+    assert task.title == "Título atualizado"
+
+
+@pytest.mark.django_db
+def test_owner_can_delete_task(authenticated_client, user):
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa para excluir",
+    )
+
+    response = authenticated_client.delete(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert Task.objects.filter(id=task.id).exists() is False
+
+
+@pytest.mark.django_db
+def test_another_user_cannot_update_task(user):
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa protegida",
+    )
+
+    another_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=another_user)
+
+    response = client.patch(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+        {
+            "title": "Tentativa de alteração",
+        },
+        format="json",
+    )
+
+    assert response.status_code in [
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+    ]
+
+    task.refresh_from_db()
+
+    assert task.title == "Tarefa protegida"
+
+
+@pytest.mark.django_db
+def test_another_user_cannot_delete_task(user):
+    task = Task.objects.create(
+        owner=user,
+        title="Tarefa protegida",
+    )
+
+    another_user = User.objects.create_user(
+        username="maria",
+        password="senha123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=another_user)
+
+    response = client.delete(
+        reverse(
+            "task-detail",
+            kwargs={"pk": task.id},
+        ),
+    )
+
+    assert response.status_code in [
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+    ]
+
+    assert Task.objects.filter(id=task.id).exists()
